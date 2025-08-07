@@ -1,6 +1,7 @@
 {
   "name": "localmailer",
   "version": "1.0.0",
+  "description": "Email marketing for creators. Simple, affordable, effective.",
   "private": true,
   "scripts": {
     "dev": "next dev",

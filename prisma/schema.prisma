@@ -40,8 +40,8 @@ model User {
   email            String    @unique
   emailVerified    DateTime?
   image            String?
-  businessType     String?   // restaurant, gym, salon, contractor, tutor, other
-  businessName     String?
+  creatorType      String?   // newsletter, course_creator, digital_seller, saas_builder, other
+  projectName      String?   // replaces businessName for creators
   onboardingStep   Int       @default(0)
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
@@ -60,7 +60,7 @@ model User {
 model Subscription {
   id               String   @id @default(cuid())
   userId           String   @unique
-  plan             String   // free, pro
+  plan             String   // free, starter, pro, scale
   status           String   // active, cancelled, past_due, trialing
   stripeCustomerId String?  @unique
   stripePriceId    String?

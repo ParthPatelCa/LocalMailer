@@ -213,13 +213,13 @@ export default function ContactImport() {
 
       {/* Instructions */}
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-8">
-        <h3 className="text-lg font-medium text-blue-900 mb-4">Import Instructions</h3>
+        <h3 className="text-lg font-medium text-blue-900 mb-4">Import Your Audience</h3>
         <div className="space-y-2 text-sm text-blue-800">
-          <p>• Your CSV file must include an <strong>email</strong> column</p>
-          <p>• Optional columns: first_name, last_name, phone, tags</p>
-          <p>• For tags, separate multiple tags with semicolons (e.g., "customer;vip")</p>
-          <p>• Maximum file size: 10MB</p>
-          <p>• Duplicate emails will be skipped</p>
+          <p>• <strong>CSV file required:</strong> Must include an email column</p>
+          <p>• <strong>Optional fields:</strong> first_name, last_name, phone, tags, source</p>
+          <p>• <strong>Creator-friendly:</strong> Works with Substack, Mailchimp, ConvertKit exports</p>
+          <p>• <strong>No limits:</strong> Import unlimited contacts on any plan</p>
+          <p>• <strong>Clean data:</strong> We'll automatically remove duplicates and invalid emails</p>
         </div>
         <button
           onClick={downloadTemplate}
