@@ -1,1 +1,1 @@
-{"version":1,"functions":{"/api/contacts/import":{},"/auth/signin":{},"/dashboard":{},"/dashboard/campaigns/new":{},"/dashboard/campaigns":{},"/dashboard/contacts":{},"/dashboard/contacts/import":{},"/dashboard/contacts/new":{}}}
+{"version":1,"functions":{"/api/contacts/import":{},"/auth/signin":{},"/dashboard":{},"/dashboard/campaigns":{},"/dashboard/campaigns/new":{},"/dashboard/contacts":{},"/dashboard/contacts/import":{},"/dashboard/contacts/new":{}}}

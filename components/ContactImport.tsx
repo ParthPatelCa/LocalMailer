@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react'
-import { Upload, Download, FileText, AlertCircle, CheckCircle, ArrowLeft } from 'lucide-react'
+import { Upload, Download, FileText, AlertCircle, CheckCircle, ArrowLeft, Users, Mail, Tag } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 
@@ -9,11 +9,13 @@ interface ImportPreview {
   lastName?: string
   phone?: string
   tags?: string[]
+  creatorType?: string
 }
 
 export default function ContactImport() {
   const [file, setFile] = useState<File | null>(null)
   const [isProcessing, setIsProcessing] = useState(false)
+  const [isDragOver, setIsDragOver] = useState(false)
   const [preview, setPreview] = useState<ImportPreview[]>([])
   const [errors, setErrors] = useState<string[]>([])
   const [importResults, setImportResults] = useState<{
@@ -23,10 +25,34 @@ export default function ContactImport() {
   } | null>(null)
   const router = useRouter()
 
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragOver(true)
+  }, [])
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragOver(false)
+  }, [])
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragOver(false)
+    
+    const droppedFile = e.dataTransfer.files[0]
+    if (droppedFile) {
+      processFile(droppedFile)
+    }
+  }, [])
+
   const handleFileUpload = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const uploadedFile = event.target.files?.[0]
-    if (!uploadedFile) return
+    if (uploadedFile) {
+      processFile(uploadedFile)
+    }
+  }, [])
 
+  const processFile = (uploadedFile: File) => {
     if (uploadedFile.type !== 'text/csv' && !uploadedFile.name.endsWith('.csv')) {
       setErrors(['Please upload a CSV file'])
       return
@@ -34,8 +60,9 @@ export default function ContactImport() {
 
     setFile(uploadedFile)
     setErrors([])
+    setImportResults(null)
     parseCSV(uploadedFile)
-  }, [])
+  }
 
   const parseCSV = (file: File) => {
     const reader = new FileReader()
@@ -231,16 +258,29 @@ export default function ContactImport() {
       </div>
 
       {/* File Upload */}
-      <div className="bg-white shadow rounded-lg">
-        <div className="p-6">
+      <div className="bg-white shadow-sm rounded-xl border border-gray-200">
+        <div className="p-8">
           <div className="max-w-lg mx-auto">
-            <div className="text-center">
-              <Upload className="mx-auto h-12 w-12 text-gray-400" />
+            <div 
+              className={`border-2 border-dashed rounded-xl p-8 text-center transition-all duration-300 ${
+                isDragOver 
+                  ? 'border-primary-500 bg-primary-50' 
+                  : 'border-gray-300 hover:border-gray-400'
+              }`}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+            >
+              <Upload className={`mx-auto h-12 w-12 transition-colors ${
+                isDragOver ? 'text-primary-500' : 'text-gray-400'
+              }`} />
               <div className="mt-4">
                 <label htmlFor="file-upload" className="cursor-pointer">
-                  <span className="mt-2 block text-sm font-medium text-gray-900">
-                    Drop your CSV file here, or{' '}
-                    <span className="text-blue-600 hover:text-blue-500">browse</span>
+                  <span className="mt-2 block text-lg font-medium text-gray-900">
+                    {isDragOver ? 'Drop your file here' : 'Drop your CSV file here, or'}{' '}
+                    {!isDragOver && (
+                      <span className="text-primary-600 hover:text-primary-500 underline">browse</span>
+                    )}
                   </span>
                   <input
                     id="file-upload"
@@ -251,16 +291,24 @@ export default function ContactImport() {
                     onChange={handleFileUpload}
                   />
                 </label>
-                <p className="mt-1 text-xs text-gray-500">CSV files up to 10MB</p>
+                <p className="mt-2 text-sm text-gray-500">CSV files up to 10MB</p>
+                
+                {file && (
+                  <div className="mt-4 flex items-center justify-center space-x-2 text-sm text-green-600">
+                    <FileText className="h-4 w-4" />
+                    <span>{file.name}</span>
+                    <CheckCircle className="h-4 w-4" />
+                  </div>
+                )}
               </div>
             </div>
           </div>
 
           {/* Errors */}
           {errors.length > 0 && (
-            <div className="mt-6 bg-red-50 border border-red-200 rounded-lg p-4">
+            <div className="mt-8 bg-red-50 border border-red-200 rounded-xl p-6 animate-slide-up">
               <div className="flex">
-                <AlertCircle className="h-5 w-5 text-red-400" />
+                <AlertCircle className="h-5 w-5 text-red-400 flex-shrink-0 mt-0.5" />
                 <div className="ml-3">
                   <h3 className="text-sm font-medium text-red-800">Import Errors</h3>
                   <div className="mt-2 text-sm text-red-700">
@@ -278,48 +326,77 @@ export default function ContactImport() {
           {/* Preview */}
           {preview.length > 0 && (
             <div className="mt-8">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-medium text-gray-900">Preview</h3>
-                <span className="text-sm text-gray-500">
-                  Showing first 10 of {preview.length} contacts
-                </span>
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h3 className="text-lg font-medium text-gray-900 flex items-center">
+                    <Users className="h-5 w-5 mr-2 text-primary-600" />
+                    Contact Preview
+                  </h3>
+                  <p className="text-sm text-gray-500 mt-1">
+                    Showing first 10 contacts from your file
+                  </p>
+                </div>
+                <div className="bg-primary-50 text-primary-700 px-3 py-1 rounded-full text-sm font-medium">
+                  {preview.length} contacts ready
+                </div>
               </div>
 
-              <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
-                <table className="min-w-full divide-y divide-gray-300">
+              <div className="overflow-hidden shadow-sm ring-1 ring-gray-200 rounded-xl">
+                <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Email
+                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <div className="flex items-center">
+                          <Mail className="h-4 w-4 mr-2" />
+                          Email
+                        </div>
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Name
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Phone
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Tags
+                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <div className="flex items-center">
+                          <Tag className="h-4 w-4 mr-2" />
+                          Tags
+                        </div>
                       </th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {preview.map((contact, index) => (
-                      <tr key={index}>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {preview.slice(0, 10).map((contact, index) => (
+                      <tr key={index} className="hover:bg-gray-50 transition-colors">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
                           {contact.email}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                           {contact.firstName || contact.lastName 
                             ? `${contact.firstName || ''} ${contact.lastName || ''}`.trim()
-                            : '-'
+                            : <span className="text-gray-400">-</span>
                           }
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {contact.phone || '-'}
+                          {contact.phone || <span className="text-gray-400">-</span>}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {contact.tags?.join(', ') || '-'}
+                          {contact.tags?.length ? (
+                            <div className="flex flex-wrap gap-1">
+                              {contact.tags.slice(0, 3).map((tag, tagIndex) => (
+                                <span key={tagIndex} className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                  {tag}
+                                </span>
+                              ))}
+                              {contact.tags.length > 3 && (
+                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                  +{contact.tags.length - 3}
+                                </span>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-gray-400">-</span>
+                          )}
                         </td>
                       </tr>
                     ))}
@@ -327,21 +404,26 @@ export default function ContactImport() {
                 </table>
               </div>
 
-              <div className="mt-6 flex justify-end">
+              <div className="mt-8 flex justify-between items-center">
+                <div className="text-sm text-gray-600">
+                  {preview.length > 10 && (
+                    <p>Showing 10 of {preview.length} contacts. All will be imported.</p>
+                  )}
+                </div>
                 <button
                   onClick={handleImport}
                   disabled={isProcessing || errors.length > 0}
-                  className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed px-8 py-3 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
                 >
                   {isProcessing ? (
                     <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      Importing...
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>
+                      Importing {preview.length} contacts...
                     </>
                   ) : (
                     <>
-                      <Upload className="h-4 w-4 mr-2" />
-                      Import Contacts
+                      <Upload className="h-5 w-5 mr-3" />
+                      Import {preview.length} Contacts
                     </>
                   )}
                 </button>
